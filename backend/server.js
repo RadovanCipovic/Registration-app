@@ -2,10 +2,12 @@ const bodyParser = require("body-parser");
 const express = require("express");
 const mysql = require("mysql");
 const server = express();
+const cors = require("cors");
 
 // **** Express Middleware ****
 server.use(bodyParser.urlencoded({ extended: true }));
 server.use(bodyParser.json());
+server.use(cors());
 //
 
 // **** LOGIN BAZA I PODACI BAZE ZA LOGIN ****
@@ -59,13 +61,12 @@ server.post("/api/student/add", (req, res) => {
 });
 //
 
-//
 // ******* Pregled registrovanih korisnika ********
 server.get("/api/student", (req, res) => {
   const sql = "SELECT * FROM student";
   db.query(sql, function (error, result) {
     if (error) {
-      console.log("Error Connecting to DB 🚫");
+      console.log("Greška u povezivanju sa Bazom podataka 🚫");
     } else {
       res.send({
         status: true,
@@ -84,7 +85,7 @@ server.get("/api/student/:id", (req, res) => {
   const sql = "SELECT * FROM student WHERE id=" + studentid;
   db.query(sql, function (error, result) {
     if (error) {
-      res.send("Error Connecting to DB 🚫");
+      res.send("Greška u povezivanju sa Bazom podataka 🚫");
     } else {
       res.send({
         status: true,
@@ -97,9 +98,9 @@ server.get("/api/student/:id", (req, res) => {
 //
 
 //
-// ******** Nadogradnja korisnika ********
+// ******** Azuriranje korisnika ********
 
-server.put("/api/student/:id", (req, res) => {
+server.put("/api/student/update/:id", (req, res) => {
   let sql =
     "UPDATE student  SET stname=' " +
     req.body.stname +
@@ -110,7 +111,7 @@ server.put("/api/student/:id", (req, res) => {
     "' WHERE id=" +
     req.params.id;
 
-  let query = db.query(sql, (error, result) => {
+  let a = db.query(sql, (error, result) => {
     if (error) {
       res.send({
         status: false,
@@ -118,6 +119,70 @@ server.put("/api/student/:id", (req, res) => {
       });
     } else {
       res.send({ status: true, message: "Uspjesno azuriran korisnik ✅" });
+    }
+  });
+});
+//
+
+//
+// ************* BRISANJE KORISNIKA 🚫 ********* // stari <--------
+// server.delete("/api/student/delete/:id", (req, res) => {
+//   let sql = "DELETE FROM student WHERE id=" + req.params.id + "";
+//   let query = db.query(sql, (error) => {
+//     if (error) {
+//       res.send({
+//         status: false,
+//         message: "Brisanje korisnika nije uspjelo ⛔️",
+//       });
+//     } else {
+//       res.send({ status: true, message: "Brisanje korisnika uspjesno... ✅" });
+//     }
+//   });
+// });
+
+// ************* BRISANJE KORISNIKA + resetovanje id-a 🚫 *********
+server.delete("/api/student/delete/:id", (req, res) => {
+  let studentId = req.params.id;
+
+  // Brisanje korisnika
+  let sql = "DELETE FROM student WHERE id = ?";
+  db.query(sql, studentId, (error) => {
+    if (error) {
+      res.send({
+        status: false,
+        message: "Brisanje korisnika nije uspjelo ⛔️",
+      });
+    } else {
+      // Resetovanje id-a korisnika
+      db.query(
+        "SELECT MAX(id) AS max_id FROM registracija.student",
+        (error, results) => {
+          if (error) {
+            res.send({
+              status: false,
+              message: "Greška pri dobijanju maksimalnog ID-a",
+            });
+          } else {
+            const sledeciId = results[0].max_id + 1;
+            db.query(
+              `ALTER TABLE registracija.student AUTO_INCREMENT = ${sledeciId}`,
+              (error) => {
+                if (error) {
+                  res.send({
+                    status: false,
+                    message: "Greška pri resetovanju AUTO_INCREMENT brojača",
+                  });
+                } else {
+                  res.send({
+                    status: true,
+                    message: "Brisanje korisnika uspjesno... ✅",
+                  });
+                }
+              }
+            );
+          }
+        }
+      );
     }
   });
 });
