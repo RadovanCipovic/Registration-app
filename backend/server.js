@@ -124,22 +124,6 @@ server.put("/api/student/update/:id", (req, res) => {
 });
 //
 
-//
-// ************* BRISANJE KORISNIKA 🚫 ********* // stari <--------
-// server.delete("/api/student/delete/:id", (req, res) => {
-//   let sql = "DELETE FROM student WHERE id=" + req.params.id + "";
-//   let query = db.query(sql, (error) => {
-//     if (error) {
-//       res.send({
-//         status: false,
-//         message: "Brisanje korisnika nije uspjelo ⛔️",
-//       });
-//     } else {
-//       res.send({ status: true, message: "Brisanje korisnika uspjesno... ✅" });
-//     }
-//   });
-// });
-
 // ************* BRISANJE KORISNIKA + resetovanje id-a 🚫 *********
 server.delete("/api/student/delete/:id", (req, res) => {
   let studentId = req.params.id;
